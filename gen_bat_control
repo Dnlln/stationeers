@@ -1,0 +1,27 @@
+# Battery Generator Controller
+# d0: Solid Fuel Generator, d1: Station Battery
+# r5: state (0=off, 1=on)
+
+main:
+    yield
+    l r0 d1 Ratio
+    beq r5 0 check_off
+    j check_on
+
+check_off:
+    blt r0 0.5 do_on
+    j main
+
+check_on:
+    bgt r0 0.99 do_off
+    j main
+
+do_on:
+    s d0 On 1
+    move r5 1
+    j main
+
+do_off:
+    s d0 On 0
+    move r5 0
+    j main
