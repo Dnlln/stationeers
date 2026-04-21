@@ -1,0 +1,25 @@
+# Temp Controller 22-28C - d0:GasSensor d1:WallHeater d2:WallCooler
+
+define MIN_TEMP 295
+define MAX_TEMP 301
+
+main:
+    yield
+    l r0 d0 Temperature
+    move r1 MIN_TEMP
+    move r2 MAX_TEMP
+    blt r0 r1 heat
+    bgt r0 r2 cool
+    s d1 On 0
+    s d2 On 0
+    j main
+
+heat:
+    s d1 On 1
+    s d2 On 0
+    j main
+
+cool:
+    s d1 On 0
+    s d2 On 1
+    j main
