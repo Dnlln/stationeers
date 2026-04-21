@@ -1,0 +1,123 @@
+define NIGHT_THRESHOLD 5
+
+alias step    r15
+alias dV      r14
+alias dH      r13
+alias prevPwr r12
+alias curPwr  r11
+alias vAng    r10
+alias hAng    r9
+alias tmp     r8
+alias delta   r7
+
+move step    2
+move dV      1
+move dH      1
+move prevPwr 0
+move vAng    90
+move hAng    180
+
+jal WriteAngles
+
+main:
+jal ReadPower
+
+blt curPwr NIGHT_THRESHOLD night
+move prevPwr curPwr
+
+mul delta step dV
+add vAng vAng delta
+jal ClampV
+jal WriteAngles
+yield
+yield
+jal ReadPower
+
+bgt curPwr prevPwr VkeepDir
+mul dV dV -1
+mul delta step dV
+add vAng vAng delta
+add vAng vAng delta
+jal ClampV
+jal WriteAngles
+VkeepDir:
+move prevPwr curPwr
+
+mul delta step dH
+add hAng hAng delta
+jal ClampH
+jal WriteAngles
+yield
+yield
+jal ReadPower
+
+bgt curPwr prevPwr HkeepDir
+mul dH dH -1
+mul delta step dH
+add hAng hAng delta
+add hAng hAng delta
+jal ClampH
+jal WriteAngles
+HkeepDir:
+
+j main
+
+night:
+move vAng 15
+move hAng 270
+move dV 1
+move dH 1
+move prevPwr 0
+jal WriteAngles
+yield
+yield
+yield
+yield
+yield
+yield
+yield
+yield
+yield
+yield
+j main
+
+ReadPower:
+move curPwr 0
+l tmp d0 Charge
+add curPwr curPwr tmp
+l tmp d1 Charge
+add curPwr curPwr tmp
+l tmp d2 Charge
+add curPwr curPwr tmp
+l tmp d3 Charge
+add curPwr curPwr tmp
+l tmp d4 Charge
+add curPwr curPwr tmp
+j ra
+
+WriteAngles:
+s d0 Vertical vAng
+s d0 Horizontal hAng
+s d1 Vertical vAng
+s d1 Horizontal hAng
+s d2 Vertical vAng
+s d2 Horizontal hAng
+s d3 Vertical vAng
+s d3 Horizontal hAng
+s d4 Vertical vAng
+s d4 Horizontal hAng
+j ra
+
+ClampV:
+max vAng vAng 15
+min vAng vAng 165
+j ra
+
+ClampH:
+bgez hAng ClampH_hi
+add hAng hAng 360
+ClampH_hi:
+blt hAng 360 ClampH_ok
+sub hAng hAng 360
+ClampH_ok:
+j ra
