@@ -1,70 +1,63 @@
-# Temp Controller 22-28C with State Hysteresis
-# d0:GasSensor d1:Heater d2:Cooler
-# r5: state (0=off, 1=heat, 2=cool)
+# Temp Controller 24-26C with Hysteresis
+# d0:Sensor d1:Heater d2:Cooler
+# r5: state machine (0=off, 1=heat, 2=cool)
 
-define MIN_TEMP 295
-define MAX_TEMP 301
-define ST_OFF 0
-define ST_HEAT 1
-define ST_COOL 2
+define HEAT_ON 295    # 22C
+define HEAT_OFF 299   # 26C
+define COOL_ON 301    # 28C
+define COOL_OFF 297   # 24C
 
 main:
     yield
     l r0 d0 Temperature
-    move r1 MIN_TEMP
-    move r2 MAX_TEMP
     
-    # Jump based on current state stored in r5
-    move r3 ST_OFF
+    move r3 0
     beq r5 r3 st_off
-    move r3 ST_HEAT
+    move r3 1
     beq r5 r3 st_heat
-    move r3 ST_COOL
+    move r3 2
     beq r5 r3 st_cool
-    
+
 st_off:
-    # State: OFF -> turn on heat if <MIN, cool if >MAX
-    blt r0 r1 go_heat
-    bgt r0 r2 go_cool
+    blt r0 HEAT_ON go_heat
+    bgt r0 COOL_ON go_cool
     s d1 On 0
     s d2 On 0
-    move r5 ST_OFF
+    move r5 0
     j main
-    
+
 st_heat:
-    # State: HEATING -> keep heating until temp >= MAX
-    blt r0 r2 keep_heat
+    blt r0 HEAT_OFF keep_heat
     j go_off
-    keep_heat:
+keep_heat:
     s d1 On 1
     s d2 On 0
-    move r5 ST_HEAT
+    move r5 1
     j main
-    
+
 st_cool:
-    # State: COOLING -> keep cooling until temp <= MIN
-    bgt r0 r1 keep_cool
+    bgt r0 COOL_OFF keep_cool
     j go_off
-    keep_cool:
+keep_cool:
     s d1 On 0
     s d2 On 1
-    move r5 ST_COOL
+    move r5 2
     j main
-    
+
 go_heat:
     s d1 On 1
     s d2 On 0
-    move r5 ST_HEAT
+    move r5 1
     j main
-    
+
 go_cool:
     s d1 On 0
     s d2 On 1
-    move r5 ST_COOL
+    move r5 2
     j main
-    
+
 go_off:
     s d1 On 0
     s d2 On 0
-    move r5 ST_OFF
+    move r5 0
     j main
