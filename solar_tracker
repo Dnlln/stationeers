@@ -1,3 +1,4 @@
+# d0-d4: 5 солнечных панелей (dual-axis)
 define NIGHT_THRESHOLD 5
 
 alias step    r15
